@@ -7,7 +7,8 @@ library(tidyverse)
 library(dslabs)
 ds_theme_set()
 
-   #Q6: Load the Lahman library. Filter the Teams data frame to include years from 1961 to 2001. Make a scatterplot of runs per game versus at bats (AB) per game.
+    #Q1-Q5 were theoretical
+    #Q6: Load the Lahman library. Filter the Teams data frame to include years from 1961 to 2001. Make a scatterplot of runs per game versus at bats (AB) per game.
       #Which of the following is true?
       #There is no clear relationship between runs and at bats per game.
       #As the number of at bats per game increases, the number of runs per game tends to increase. (correct answer)
@@ -43,5 +44,21 @@ Teams %>% filter(yearID %in% 1961:2001 ) %>%
 
 ###Section 1.2: Correlation
 
+    #Q7: What is the correlation coefficient between number of runs per game and number of at bats per game?
 
+Teams %>% filter(yearID %in% 1961:2001 ) %>%
+  mutate(R_per_game = R/G, AB_per_game = AB/G) %>%
+  summarize(r = cor(R_per_game, AB_per_game))
+ 
+    #Q8:What is the correlation coefficient between win rate (number of wins per game) and number of errors per game?
+ 
+Teams %>% filter(yearID %in% 1961:2001 ) %>%
+  mutate(win_rate = W/G, errors_per_game = E/G) %>%
+  summarize(r = cor(win_rate, errors_per_game))
 
+    #Q9: What is the correlation coefficient between doubles (X2B) per game and triples (X3B) per game?
+
+Teams %>% filter(yearID %in% 1961:2001 ) %>%
+  mutate(triples_game = X3B/G, doubles_game = X2B/G) %>%
+  summarize(r = cor(triples_game, doubles_game))  
+  
