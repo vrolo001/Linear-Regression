@@ -108,13 +108,3 @@ r^2*100
 
   #Q11: A mother has a height of 60 inches. What is the conditional expected value of her daughter's height given the mother's height?
 cond_Y <-  b + m*60
-
-
-         
-
-
-
-
-
-
-
