@@ -61,4 +61,60 @@ Teams %>% filter(yearID %in% 1961:2001 ) %>%
 Teams %>% filter(yearID %in% 1961:2001 ) %>%
   mutate(triples_game = X3B/G, doubles_game = X2B/G) %>%
   summarize(r = cor(triples_game, doubles_game))  
-  
+
+### Section 1.3: Stratification and Variance Explained
+
+library(tidyverse)
+library(dslabs)
+library(dplyr)
+library(ggplot2)
+
+set.seed(1989, sample.kind="Rounding")
+library(HistData)
+data("GaltonFamilies")
+
+female_heights <- GaltonFamilies%>%     
+  filter(gender == "female") %>%     
+  group_by(family) %>%     
+  sample_n(1) %>%     
+  ungroup() %>%     
+  select(mother, childHeight) %>%     
+  rename(daughter = childHeight)
+
+  #Q8: Calculate the mean and standard deviation of mothers' heights, the mean and standard deviation of daughters' heights, and the correlaton coefficient between mother and
+
+head(female_heights)
+
+female_heights %>%
+  summarize(r = cor(mother, daughter),
+            Mmom = mean(mother), SDmom = sd(mother),
+            Mdaughter = mean(daughter), SDdaughter = sd (daughter))
+
+  #Q9: Calculate the slope and intercept of the regression line predicting daughters' heights given mothers' heights. Given an increase in mother's height by 1 inch, how many inches is the daughter's height expected to change?
+
+Mmom <- mean(female_heights$mother)
+SDmom <- sd(female_heights$mother)
+Mdaughter <- mean(female_heights$daughter)
+SDdaughter <- sd(female_heights$daughter)
+
+r <- cor(female_heights$mother, female_heights$daughter)
+m <- r * SDdaughter/SDmom
+b <- Mdaughter - m * Mmom
+
+r * (SDdaughter/SDmom)
+
+  #Q10: What percent of the variability in daughter heights is explained by the mother's height?
+r^2*100
+
+  #Q11: A mother has a height of 60 inches. What is the conditional expected value of her daughter's height given the mother's height?
+cond_Y <-  b + m*60
+
+
+         
+
+
+
+
+
+
+
