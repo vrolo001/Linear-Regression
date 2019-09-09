@@ -114,3 +114,109 @@ inner_join(bat_02, bat_99_01) %>%
      
 inner_join(bat_02, bat_99_01) %>%
   lm(bb ~ mean_bb, data = .)
+
+### Section 2.3:Tibbles, do, and broom
+
+install.packages("broom")
+library(broom)
+
+dat <- Teams %>% filter(yearID %in% 1961:2001) %>%
+  mutate(HR = round(HR/G, 1), 
+         BB = BB/G,
+         R = R/G) %>%
+  select(HR, BB, R) %>%
+  filter(HR >= 0.4 & HR<=1.2)
+
+dat %>%
+  group_by(HR) %>%
+  do(fit = lm(R ~ BB, data = .))
+
+  #Q5:You want to take the tibble dat and run the linear model R~BB for each strata of HR. Then you want to add 3 new columns: the
+      #coefficient, standard errod, and p-values. Having the get_slope function below, what additional code could you write to 
+      #accomplish your goal?
+
+get_slope <- function(data) {
+  fit <- lm(R ~ BB, data = data)
+  sum.fit <- summary(fit)
+  data.frame(slope = sum.fit$coefficients[2, "Estimate"], 
+             se = sum.fit$coefficients[2, "Std. Error"],
+             pvalue = sum.fit$coefficients[2, "Pr(>|t|)"])
+}
+
+dat %>%
+  group_by(HR) %>%
+  do(get_slope(.))
+
+
+dat <- Teams %>% filter(yearID %in% 1961:2001) %>%
+  mutate(HR = HR/G,
+         R = R/G) %>%
+  select(lgID, HR, BB, R) 
+
+#Use the following dataset for the next set of questions
+
+library(tidyverse)
+library(HistData)
+data("GaltonFamilies")
+set.seed(1, sample.kind = "Rounding")
+galton <- GaltonFamilies %>%
+  group_by(family, gender) %>%
+  sample_n(1) %>%
+  ungroup() %>% 
+  gather(parent, parentHeight, father:mother) %>%
+  mutate(child = ifelse(gender == "female", "daughter", "son")) %>%
+  unite(pair, c("parent", "child"))
+
+  #Q8:Group by pair and summarize the number of observations in each group
+      #How many father-daughter pairs are in the dataset?
+      #How many mother-son pairs are in the dataset?
+
+  
+galtonfd <- galton %>%              #My answer; could not find the solution using the asked group_by function. Instead, I created 2 data frames, 
+  filter(pair=="father_daughter")   #filtering the father_daughters pairs in one and the mother_son pairs in the other.
+  nrow(galtonfd)                    #Correct answer obtained albeit by other means than those asked in the question
+galtonms <- galton %>%
+  filter(pair=="mother_son")
+nrow(galtonms)
+
+galton %>%                          #Course answer
+  group_by(pair) %>%
+  summarize(n = n())
+
+  #Q9: Calculate the correlation coefficients for fathers and daughters, fathers and sons, mothers and daughters and mothers and sons.
+      #Which pair has the strongest correlation in heights?   (father_son)
+      #Which pair has the weakest correlation in heights?     (mother_son)
+      
+galton %>%
+  group_by(pair) %>%
+  summarize(r = cor(parentHeight, childHeight))
+
+  #Q10: Use lm and the broom package to fit regression lines for each parent-child pair type. 
+      #Compute the least squares estimates, standard errors, confidence intervals and p-values for the parentHeight coefficient for each pair.
+  
+      #What is the estimate of the father-daughter coefficient? (0.345 inches)
+      #For every 1-inch increase in mother's height, how many inches does the typical son's height increase?  (0.381 inches)
+      #Which sets of parent-child heights are significantly correlated at a p-value cut off of 0.05?
+      #Which of the following statements are true?
+        #All of the confidence intervals overlap each other.
+        #At least one confidence interval covers zero.
+        #The confidence intervals involving mothers' heights are larger than the confidence intervals involving fathers' heights.
+        #The confidence intervals involving daughters' heights are larger than the confidence intervals involving sons' heights.
+        #The data are consistent with inheritance of height being independent of the child's gender.
+        #The data are consistent with inheritance of height being independent of the parent's gender.
+
+galton %>%
+  group_by(pair) %>%
+  do(tidy(lm(childHeight ~ parentHeight, data = .), conf.int = TRUE)) %>%
+  filter(term == "parentHeight") %>%
+  select (pair, estimate, std.error, p.value, conf.low, conf.high)
+
+galton %>%
+  group_by(pair) %>%
+  do(tidy(lm(childHeight ~ parentHeight, data = .), conf.int = TRUE)) %>%
+  filter(term == "parentHeight") %>%
+  select (pair, estimate, std.error, p.value, conf.low, conf.high) %>%
+  ggplot(aes(pair, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar() +
+  geom_point()
+
