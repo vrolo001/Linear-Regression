@@ -220,3 +220,78 @@ galton %>%
   geom_errorbar() +
   geom_point()
 
+### Section 2.4: Regression and Baseball
+
+  #Q3: Imagine you have two teams. Team A is comprised of batters who, on average, get two bases on balls, four singles, one double, and one home run. 
+      #Team B is comprised of batters who, on average, get one base on balls, six singles, two doubles, and one triple. Which team scores more runs, as predicted by our model?
+
+      #model was Y_hat = 0.37X1 + 0.52X2 + 0.77X3 + 1.24X4 + 1.44*X5; therefore team B is predicted to score more runs
+
+Runs <- function(BB,S,D,Tri,HR){
+  0.37*BB + 0.52*S + 0.77*D + 1.24*Tri + 1.44*HR
+}
+Team_A <- Runs(2, 4, 1, 0, 1 )
+Team_B <- Runs(1, 6, 2, 1, 0)
+Team_A >= Team_B
+
+
+  #Q9: Use the Teams data frame from the Lahman package. Fit a multivariate linear regression model to obtain the effects of BB and HR on Runs (R) in 1971. 
+      #Use the tidy function in the broom package to obtain the results in a data frame.
+
+  #Q9A: What is the estimate for the effect of BB on runs? For HR on runs?
+
+library(broom)
+ 
+    #My answer       
+Teams %>% 
+  filter(yearID == 1971) %>%
+  select(BB, HR, R) %>%
+  do(tidy(lm(R ~ BB + HR, data = .) , conf.int = TRUE))
+
+    #Course answer
+Teams %>%
+  filter(yearID == 1971) %>%
+  lm(R ~ BB + HR, data = .) %>%
+  tidy() %>%
+  filter(term == "BB") %>%
+  pull(estimate)
+
+Teams %>%
+  filter(yearID == 1971) %>%
+  lm(R ~ BB + HR, data = .) %>%
+  tidy() %>%
+  filter(term == "HR") %>%
+  pull(estimate)
+
+  #Q9B: Interpret the p-values using a cutoff of 0.05. Which of the options given is the correct interpretation?
+      #Both BB and HR have a nonzero effect on runs.
+      #HR has a significant effect on runs, but the evidence is not strong enough to suggest BB also does.  (correct)
+      #BB has a significant effect on runs, but the evidence is not strong enough to suggest HR also does.
+      #Neither BB nor HR have a statistically significant effect on runs.
+
+  #Q10: Repeat the above exercise to find the effects of BB and HR on runs (R) for every year from 1961 to 2018 using do and the broom package.
+    #Make a scatterplot of the estimate for the effect of BB on runs over time and add a trend line with confidence intervals.
+
+Teams %>% 
+  filter(yearID %in% 1961: 2018) %>%
+  group_by(yearID) %>%
+  select(yearID, BB, HR, R) %>%
+  do(tidy(lm(R ~ BB + HR, data = .), conf.int = TRUE)) %>%
+  ungroup() %>%
+  filter(term == "BB") %>%
+  ggplot(aes(yearID, estimate))+
+  geom_point()+
+  geom_smooth(method = "lm")
+
+  #Q11: Fit a linear model on the results from Question 10 to determine the effect of year on the impact of BB (effect of year on the estimate).
+      #For each additional year, by what value does the impact of BB on runs change? (0.004)
+      #What is the p-value for this effect?   (0.008)
+
+Teams %>% 
+  filter(yearID %in% 1961: 2018) %>%
+  group_by(yearID) %>%
+  select(yearID, BB, HR, R) %>%
+  do(tidy(lm(R ~ BB + HR, data = .), conf.int = TRUE)) %>%
+  ungroup() %>%
+  filter(term == "BB") %>%
+  do(tidy(lm(estimate ~ yearID, data = .)))
