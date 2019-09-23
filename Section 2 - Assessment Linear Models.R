@@ -42,28 +42,63 @@ Teams_small %>%
 cor(Teams_small$W, Teams_small$R/Teams_small$G)
 cor(Teams_small$W, Teams_small$HR/Teams_small$G)
 
+#Q3: Stratify Teams_small by wins: divide number of wins by 10 and then round to the nearest integer. Keep only strata 5 through 10, which have 20 or more data points.
+  #Q3a: How many observations are in the 8 win strata?  (338)
 
-  #Q3: Stratify Teams_small by wins: divide number of wins by 10 and then round to the nearest integer. Keep only strata 5 through 10, which have 20 or more data points.
+  #Course answer (I could not answer this one)
 
-Teams_small %>%
-  mutate(wins_strata = (floor(0.5 + W/10)), floor(0.5 + wins_strata)) %>%
-  filter(wins_strata %in% c(5:10)) %>%
-  filter(wins_strata == 8)
+dat <- Teams_small %>%
+  mutate(wins_strata = round(W/10)) %>%
+  filter(wins_strata >= 5 & wins_strata <= 10)
+sum(dat$wins_strata == 8)
 
-  #Q3a: How many observations are in the 8 win strata?
+  #Q3b: Calculate the slope of the regression line predicting average attendance given runs per game for each of the win strata.
+      #Which win stratum has the largest regression line slope? (5)
 
-new_Teams_small <- Teams_small %>%
-  mutate(wins_strata = (floor(0.5 + W/10)), floor(0.5 + wins_strata)) %>%
-  sum(wins_strata == 8)
+  #My answer
+get_slope <- function(data){
+  fit <- lm (avg_attendance ~ R_game, data = data)
+  data.frame(slope = fit$coefficients[2])
+}
 
-#
-#
-#
-#
-#
-#
-#
-#####
+dat %>% 
+  mutate(R_game = R/G) %>%
+  group_by(wins_strata) %>%
+  do(get_slope(.))
+
+  #Course answer
+
+dat %>%  
+  group_by(wins_strata) %>%
+  summarize(slope = cor(R/G, avg_attendance)*sd(avg_attendance)/sd(R/G))
+
+      #Calculate the slope of the regression line predicting average attendance given HR per game for each of the win strata.
+      #Which win stratum has the largest regression line slope? (5)
+
+  #My answer
+
+get_slope <- function(data){
+  fit <- lm (avg_attendance ~ HR_game, data = data)
+  data.frame(slope = fit$coefficients[2])
+}
+
+dat %>% 
+  mutate(HR_game = HR/G) %>%
+  group_by(wins_strata) %>%
+  do(get_slope(.))
+
+  #Course answer
+
+dat %>%  
+  group_by(wins_strata) %>%
+  summarize(slope = cor(HR/G, avg_attendance)*sd(avg_attendance)/sd(HR/G))
+
+  #Q3c: Which of the following are true about the effect of win strata on average attendance?
+      #Across all win strata, runs per game are positively correlated with average attendance.  (correctly answered true)
+      #Runs per game have the strongest effect on attendance when a team wins many games.   (orrectly answered false)
+      #After controlling for number of wins, home runs per game are not correlated with attendance. (correctly answered false)
+      #Home runs per game have the strongest effect on attendance when a team does not win many games.  (correctly answered true)
+      #Among teams with similar numbers of wins, teams with more home runs per game have larger average attendance. (incorrectly answered false)
 
   #Q4: Using the original Teams_small wins column, fit a multivariate regression determining the effects of runs per game, home runs per game, wins, and year on average attendance. 
       #What is the estimate of the effect of runs per game on average attendance? (321.8)
@@ -128,7 +163,3 @@ newdata <- Teams %>%
          HR_game = HR/G)
 preds <- predict(fit, newdata)
 cor(preds, newdata$avg_attendance)
-
-
-
-
