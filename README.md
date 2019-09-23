@@ -1,5 +1,5 @@
 # Linear-Regression
-Exercises form the HarvardX course, started 05/09/19, in progress
+Exercises form the HarvardX course, started 05/09/19 and ended 23/09/19
 
 This course is the 7th in the Data Science edx certificate, but was taken third due to linear regression being a skill highly used during
 my PhD studies, where I wanted to start using R when performing analyses with my own data. Because I skipped some courses, some exercises where
